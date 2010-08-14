@@ -1,0 +1,30 @@
+#!/bin/bash
+
+export VER=$1
+if [[ "$1" == "" ]] ; then
+	echo "$0 <version> [dev branch] [release branch]"
+	exit -1
+fi
+
+DIRTY=`git status --porcelain | wc -l`
+if (( $DIRTY != 0 )) ; then
+	echo "Working directory is dirty; will not tag."
+	exit -1
+fi
+
+export DEVBRANCH=${2:-develop}
+export RELBRANCH=${3:-master}
+
+echo Creating release v$1 on $RELBRANCH, based on $DEVBRANCH.
+
+git checkout $DEVBRANCH
+git checkout -b release-$VER
+agvtool next-version -all
+agvtool new-marketing-version $VER
+git commit -am "Set release version to $VER."
+git checkout $RELBRANCH
+git merge --no-ff release-$VER
+git tag -f -a v$VER -m "Release $VER"
+git checkout $DEVBRANCH
+git merge release-$VER
+git branch -d release-$VER

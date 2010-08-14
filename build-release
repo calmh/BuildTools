@@ -1,0 +1,42 @@
+#!/bin/bash
+
+TAG=${1:-`git describe --always --long | sed s/^v//`}
+TARGET=$2
+CONFIGURATION=$3
+SDK=${4:+-sdk $4}
+DISTDIR=~/Releases
+
+if [[ "$TARGET" == "" || "$CONFIGURATION" == "" ]] ; then
+        echo "$0 <tag> <target> <configuration> [sdk]"
+        echo "  Set tag to \"\" to use git describe."
+        exit -1
+fi
+
+echo Creating distribution for tag $TAG
+echo "  " -target $TARGET -configuration $CONFIGURATION $SDK
+echo
+
+BD=build/$CONFIGURATION-iphoneos
+rm -rf $BD build/$TARGET.build ipa
+[ -d $DISTDIR ] || mkdir $DISTDIR
+if ( xcodebuild -target $TARGET -configuration $CONFIGURATION $SDK \
+	| egrep --line-buffered '^[^ ]' \
+	| sed -l 's| .*/| |' ) ; then
+        echo
+	echo Packaging...
+	mkdir -p ipa/Payload
+	mv $BD/$TARGET.app ipa/Payload
+	PF=${TARGET}_${CONFIGURATION}.mobileprovision
+	[ -f $PF ] && echo Using custom provisioning profile. && cp $PF ipa/Payload/$TARGET.app/embedded.mobileprovision
+	ditto -c -k -X ipa $BD/$TARGET.ipa
+	rm -rf build/$CONFIGURATION-iphoneos/Tests.*
+	rm -rf ipa
+
+	DESTINATION=$DISTDIR/$TARGET-$TAG-$CONFIGURATION
+	rm -rf $DESTINATION
+	mv build/$CONFIGURATION-iphoneos $DESTINATION
+	echo OK.
+else
+	echo failed
+	exit -1
+fi
