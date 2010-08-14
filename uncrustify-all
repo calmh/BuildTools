@@ -1,0 +1,4 @@
+#!/bin/sh
+
+find . -iname "*.[hm]" | xargs uncrustify -l oc --replace --no-backup
+
