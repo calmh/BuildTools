@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+releases = []
+current = []
+version = "Current dev"
+revisions = ARGV[0].to_i or 1
+
+revisions_parsed = 0
+`git log`.each_line do |line|
+  line.strip!
+  if line =~ /\((new|fix|chg)\)/
+    current << line
+  end
+  if line =~ /Set release version to ([0-9a-z.]+)\./
+    if version != $1
+      if current.count > 0
+        releases << [ version, current.reverse ]
+        current = []
+        revisions_parsed += 1
+        if revisions_parsed >= revisions
+          break
+        end
+      end
+      version = $1
+    end
+  end
+end
+
+releases.each do |version, changes|
+  if changes.count > 0
+    puts "*** #{version} ***"
+    puts
+    changes.each do |change|
+      puts change
+    end
+    puts
+  end
+end
