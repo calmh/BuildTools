@@ -24,7 +24,8 @@ agvtool new-marketing-version $VER
 git commit -am "Set release version to $VER."
 git checkout $RELBRANCH
 git merge --no-ff release-$VER
-git tag -f -a v$VER -m "Release $VER"
+BUILD=`agvtool what-version | grep -v Current | tr -d ' \t'`
+git tag -f -a v$VER-$BUILD -m "Release $VER, build $BUILD"
 git checkout $DEVBRANCH
 git merge release-$VER
 git branch -d release-$VER
