@@ -3,7 +3,7 @@
 TAG=${1:-`git describe --always --long | sed s/^v//`}
 TARGET=$2
 CONFIGURATION=$3
-SDK=${4:+-sdk $4}
+SDK=$4
 DISTDIR=~/Releases
 
 if [[ "$TARGET" == "" || "$CONFIGURATION" == "" ]] ; then
@@ -11,6 +11,11 @@ if [[ "$TARGET" == "" || "$CONFIGURATION" == "" ]] ; then
         echo "  Set tag to \"\" to use git describe."
         exit -1
 fi
+
+# If SDK is not set, set it to the highest available iphoneos one.
+SDK=${SDK:="`xcodebuild -showsdks | grep 'sdk iphoneos' | sed 's/.*-sdk //' | sort | tail -n 1`"}
+# Add -sdk if the SDK is set.
+SDK=${SDK:+-sdk $SDK}
 
 echo Creating distribution for tag $TAG
 echo "  " -target $TARGET -configuration $CONFIGURATION $SDK
