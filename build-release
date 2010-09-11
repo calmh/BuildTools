@@ -1,30 +1,43 @@
 #!/bin/bash
 
-TAG=${1:-`git describe --always --long | sed s/^v//`}
-TARGET=$2
-CONFIGURATION=$3
-SDK=$4
-DISTDIR=~/Releases
+while getopts "hn:t:c:s:d:" flag ; do
+        case $flag in
+                h) HELP=1 ;;
+                n) NAME=$OPTARG ;;
+                t) TARGET=$OPTARG ;;
+                c) CONFIGURATION=$OPTARG ;;
+                s) SDK=$OPTARG ;;
+                d) DISTDIR=$OPTARG ;;
+        esac
+done
 
-if [[ "$TARGET" == "" || "$CONFIGURATION" == "" ]] ; then
-        echo "$0 <tag> <target> <configuration> [sdk]"
-        echo "  Set tag to \"\" to use git describe."
+NAME=${NAME:=`git describe --always --long | sed s/^v//`}
+TARGET=${TARGET:=`xcodebuild -list | grep -A 1 Targets | tail -n 1 | tr -d ' '`}
+CONFIGURATION=${CONFIGURATION:=`xcodebuild -list | grep '(Active)' | tail -n 1 | tr -d ' ' | sed 's/(Active)//'`}
+SDK=${SDK:="`xcodebuild -showsdks | grep 'sdk iphoneos' | sed 's/.*-sdk //' | sort | tail -n 1`"}
+DISTDIR=${DISTDIR:=~/Releases}
+
+if [[ "$HELP" != "" ]] ; then
+        echo "$0 [options]"
+        echo " -h               Show help"
+        echo " -n <name>        Set distribution name           ($NAME)"
+        echo " -t <target>      Set build target                ($TARGET)"
+        echo " -c <conf>        Set build configuration         ($CONFIGURATION)"
+        echo " -s <sdk>         Set build SDK                   ($SDK)"
+        echo " -d <distdir>     Set destination directory       ($DISTDIR)"
         exit -1
 fi
 
-# If SDK is not set, set it to the highest available iphoneos one.
-SDK=${SDK:="`xcodebuild -showsdks | grep 'sdk iphoneos' | sed 's/.*-sdk //' | sort | tail -n 1`"}
-# Add -sdk if the SDK is set.
-SDK=${SDK:+-sdk $SDK}
-
-echo Creating distribution for tag $TAG
-echo "  " -target $TARGET -configuration $CONFIGURATION $SDK
+echo Creating distribution package named \"$NAME\"
+echo " -target $TARGET"
+echo " -configuration $CONFIGURATION"
+echo " -sdk $SDK"
 echo
 
 BD=build/$CONFIGURATION-iphoneos
 rm -rf $BD build/$TARGET.build ipa
 [ -d $DISTDIR ] || mkdir $DISTDIR
-if ( xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" $SDK \
+if ( xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" -sdk "$SDK" \
 	| egrep --line-buffered '^[^ ]' \
 	| sed -l 's| .*/| |' ) ; then
         echo
@@ -37,10 +50,10 @@ if ( xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" $SDK \
 	rm -rf "build/$CONFIGURATION-iphoneos/Tests.*"
 	rm -rf ipa
 
-	DESTINATION="$DISTDIR/$TARGET-$TAG-$CONFIGURATION"
+	DESTINATION="$DISTDIR/$TARGET-$NAME-$CONFIGURATION"
 	rm -rf "$DESTINATION"
 	mv "build/$CONFIGURATION-iphoneos" "$DESTINATION"
-	echo OK.
+	echo OK. Distribution is in $DESTINATION.
 else
 	echo failed
 	exit -1
