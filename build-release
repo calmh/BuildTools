@@ -12,8 +12,8 @@ while getopts "hn:t:c:s:d:" flag ; do
 done
 
 NAME=${NAME:=`git describe --always --long | sed s/^v//`}
-TARGET=${TARGET:=`xcodebuild -list | grep -A 1 Targets | tail -n 1 | tr -d ' '`}
-CONFIGURATION=${CONFIGURATION:=`xcodebuild -list | grep '(Active)' | tail -n 1 | tr -d ' ' | sed 's/(Active)//'`}
+TARGET=${TARGET:=`xcodebuild -list | sed -n '/Targets/,/Build/p' | grep '(Active)' | sed 's/(Active)//;s/^ *//;s/ *$//'`}
+CONFIGURATION=${CONFIGURATION:=`xcodebuild -list | sed -n '/Configuration/,$p' | grep '(Active)' | sed 's/(Active)//;s/^ *//;s/ *$//'`}
 SDK=${SDK:="`xcodebuild -showsdks | grep 'sdk iphoneos' | sed 's/.*-sdk //' | sort | tail -n 1`"}
 DISTDIR=${DISTDIR:=~/Releases}
 
