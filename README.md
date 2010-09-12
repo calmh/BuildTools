@@ -43,5 +43,6 @@ Formats a changelog from the git commit log. Assumes that commits are prefixed w
 
 - (new): A new feature.
 - (chg): A change to an existing feature.
-- (fix): A bugfix.- (dev): A change only relevant to developers - not included in the changelog.
+- (fix): A bugfix.
+- (dev): A change only relevant to developers - not included in the changelog.
 - "Set release version to ([0-9.a-z+])" - Marks the release point.
