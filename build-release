@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 while getopts "hn:t:c:s:d:" flag ; do
         case $flag in
@@ -41,12 +41,17 @@ if ( xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" -sdk "$SDK" \
 	| egrep --line-buffered '^[^ ]' \
 	| sed -l 's| .*/| |' ) ; then
         echo
-	echo Packaging...
+
+	APPPATH=( $BD/*.app )
+	APPNAME=${APPPATH:t}
+	APPNAME=${APPNAME:r}
+	IPANAME=${APPNAME// /_}
+
+	echo Packaging app "$APPNAME"...
 	mkdir -p ipa/Payload
-	mv "$BD/$TARGET.app" ipa/Payload
-	PF="${TARGET}_${CONFIGURATION}.mobileprovision"
-	[ -f "$PF" ] && echo Using custom provisioning profile. && cp $PF "ipa/Payload/$TARGET.app/embedded.mobileprovision"
-	ditto -c -k -X ipa "$BD/$TARGET.ipa"
+	mv "$BD/$APPNAME.app" ipa/Payload
+
+	ditto -c -k -X ipa "$BD/$IPANAME.ipa"
 	rm -rf "build/$CONFIGURATION-iphoneos/Tests.*"
 	rm -rf ipa
 
