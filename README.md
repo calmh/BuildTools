@@ -10,7 +10,7 @@ Creates a new tagged release, by git branching a development branch into a new r
 
 If your development is on the "develop" branch and your releases are on the "master" branch, you can create a new version "1.0" by:
 
-    tag-release develop master
+    tag-release 1.0 develop master
 
 The new release will be made on the master branched, tagged with a new annotated tag named "v1.0".
 
