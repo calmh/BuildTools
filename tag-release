@@ -3,6 +3,7 @@
 export VER=$1
 if [[ "$1" == "" ]] ; then
 	echo "$0 <version> [dev branch] [release branch]"
+	echo " Specify version as numeric only, i.e. '2.0.1'."
 	exit -1
 fi
 
