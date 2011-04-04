@@ -16,16 +16,37 @@ export DEVBRANCH=${2:-develop}
 export RELBRANCH=${3:-master}
 
 echo Creating release v$1 on $RELBRANCH, based on $DEVBRANCH.
+echo Press enter to continue.
+read
 
 git checkout $DEVBRANCH
 git checkout -b release-$VER
+
 agvtool next-version -all
 agvtool new-marketing-version $VER
+make version VERSION=$VER
+
+echo Updated version in source code. You can make further changes now before I commit.
+echo Press enter to continue.
+read
+
 git commit -am "Set release version to $VER."
 git checkout $RELBRANCH
 git merge --no-ff release-$VER
+
+echo Commited and merged to temporary release branch.
 BUILD=`agvtool what-version | grep -v Current | tr -d ' \t'`
-git tag -f -a v$VER-$BUILD -m "Release $VER, build $BUILD"
+if [[ "$BUILD" == "" ]] ; then
+        echo "Couldn't figure out current build number, tagging as v$VER."
+        git tag -f -a v$VER -m "Release $VER"
+else
+        echo "Tagging as v$VER-$BUILD."
+        git tag -f -a v$VER-$BUILD -m "Release $VER, build $BUILD"
+fi
+
+echo Merging back to release branch.
 git checkout $DEVBRANCH
 git merge release-$VER
+
+echo Deleting temporary branch.
 git branch -d release-$VER
