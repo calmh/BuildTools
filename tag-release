@@ -36,7 +36,7 @@ git checkout $RELBRANCH
 git merge --no-ff release-$VER
 
 echo Commited and merged to temporary release branch.
-BUILD=`agvtool what-version | grep -v Current | tr -d ' \t'`
+BUILD=`agvtool what-version | grep -v Current | tr -dC '[0-9]'`
 if [[ "$BUILD" == "" ]] ; then
         echo "Couldn't figure out current build number, tagging as v$VER."
         git tag -f -a v$VER -m "Release $VER"
